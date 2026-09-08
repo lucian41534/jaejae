@@ -496,6 +496,52 @@
     setState({ settingsOpen: !state.settingsOpen });
   };
 
+  window.plExportBackup = function () {
+    const payload = {
+      exportedAt: new Date().toISOString(),
+      purchases: state.purchases,
+      builds: state.builds,
+      feeConfig: state.feeConfig,
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const d = new Date();
+    const stamp = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    a.href = url;
+    a.download = `parts-ledger-backup-${stamp}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  };
+
+  window.plImportBackup = function (input) {
+    const file = input.files && input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const data = JSON.parse(reader.result);
+        if (!Array.isArray(data.purchases) || !Array.isArray(data.builds)) {
+          throw new Error("백업 파일 형식이 올바르지 않습니다.");
+        }
+        const ok = window.confirm(
+          `백업 파일을 불러오면 현재 데이터(구매 ${state.purchases.length}건, 본체 ${state.builds.length}개)가 백업 파일 내용(구매 ${data.purchases.length}건, 본체 ${data.builds.length}개)으로 덮어써집니다. 계속할까요?`
+        );
+        if (!ok) return;
+        const fc = data.feeConfig ? { ...DEFAULT_FEE_CONFIG, ...data.feeConfig } : state.feeConfig;
+        setState({ purchases: data.purchases, builds: data.builds, feeConfig: fc, error: "" });
+        persist(data.purchases, data.builds);
+        if (data.feeConfig) persistFeeConfig(fc);
+      } catch (e) {
+        setState({ error: "백업 파일을 읽지 못했습니다: " + (e.message || "") });
+      }
+    };
+    reader.readAsText(file);
+    input.value = "";
+  };
+
   window.plSaveFeeConfig = function () {
     const rates = {};
     SITES.forEach((s) => {
@@ -980,7 +1026,12 @@
         </div>
         <div class="pl-headstat"><b>${stockCount}</b><span>재고 부품 · ${won(stockValue)}</span></div>
       </div>
-      <div style="display:flex; justify-content:flex-end; margin-bottom:${state.settingsOpen || state.apiSettingsOpen ? "8" : "14"}px;">
+      <div style="display:flex; justify-content:flex-end; gap:8px; margin-bottom:${state.settingsOpen || state.apiSettingsOpen ? "8" : "14"}px; flex-wrap:wrap;">
+        <button class="pl-icon-btn" style="font-size:11px; gap:4px; border:1px solid var(--line); border-radius:4px; padding:5px 9px;" onclick="plExportBackup()">⬇ 백업 다운로드</button>
+        <label class="pl-icon-btn" style="font-size:11px; gap:4px; border:1px solid var(--line); border-radius:4px; padding:5px 9px; cursor:pointer; margin:0;">
+          ⬆ 백업 복원
+          <input type="file" accept="application/json" style="display:none" onchange="plImportBackup(this)">
+        </label>
         <button class="pl-icon-btn" style="font-size:11px; gap:4px; border:1px solid var(--line); border-radius:4px; padding:5px 9px;" onclick="plToggleFeeSettings()">⚙ 수수료·배송비 설정</button>
         <button class="pl-icon-btn" style="font-size:11px; gap:4px; border:1px solid var(--line); border-radius:4px; padding:5px 9px;" onclick="plToggleApiSettings()">⚙ API 키 ${getApiKey() ? `설정됨 (${maskKey(getApiKey())})` : "설정 안 됨"}</button>
       </div>
