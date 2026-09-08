@@ -19,85 +19,157 @@
 <div id="pl-root"></div>
 <style>
   #pl-root {
-    --ink: #e9e4d8;
-    --sub: #9a9284;
-    --surface: #232019;
-    --surface2: #2b2720;
-    --line: #3a352c;
-    --amber: #d99a3d;
+    --ink: #ece7db;
+    --sub: #a39a8a;
+    --sub-dim: #766d5f;
+    --surface: #241f18;
+    --surface2: #2c261d;
+    --surface3: #181410;
+    --line: #3d372c;
+    --line-soft: #322c22;
+    --amber: #dd9f42;
+    --amber-dim: #b3833a;
     --good: #7fae8c;
-    --bad: #c96a5a;
+    --bad: #cc7361;
     font-family: 'IBM Plex Mono', 'Menlo', monospace;
-    background: #1a1712;
+    background: #17140f;
     color: var(--ink);
-    padding: 20px 16px 40px;
+    padding: 22px 16px 44px;
     font-size: 13.5px;
+    line-height: 1.5;
     box-sizing: border-box;
     min-height: 100%;
+    -webkit-tap-highlight-color: transparent;
   }
   #pl-root * { box-sizing: border-box; }
   @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&display=swap');
-  .pl-header { display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:20px; padding-bottom:16px; border-bottom:1px solid var(--line); }
-  .pl-kicker { font-size:11px; letter-spacing:1px; color:var(--amber); margin-bottom:4px; }
-  .pl-title { font-family:'Source Serif 4', serif; font-size:26px; font-weight:700; margin:0; color:var(--ink); }
+
+  .pl-header { display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:22px; padding-bottom:18px; border-bottom:1px solid var(--line); }
+  .pl-kicker { font-size:11px; letter-spacing:0.5px; color:var(--amber); margin-bottom:5px; }
+  .pl-title { font-family:'Source Serif 4', serif; font-size:27px; font-weight:700; margin:0; color:var(--ink); letter-spacing:-0.2px; }
   .pl-headstat { text-align:right; }
-  .pl-headstat b { display:block; font-size:20px; font-weight:600; color:var(--amber); }
+  .pl-headstat b { display:block; font-size:21px; font-weight:600; color:var(--amber); line-height:1.2; }
   .pl-headstat span { font-size:10.5px; color:var(--sub); }
-  .pl-tabs { display:flex; gap:6px; margin-bottom:18px; overflow-x:auto; padding-bottom:2px; }
-  .pl-tab { display:flex; align-items:center; gap:6px; background:transparent; border:1px solid var(--line); color:var(--sub); padding:8px 12px; border-radius:5px; font-size:12.5px; font-family:inherit; cursor:pointer; white-space:nowrap; flex-shrink:0; }
-  .pl-tab.active { background:var(--surface2); color:var(--ink); border-color:var(--amber); }
-  .pl-count { background:var(--line); color:var(--ink); border-radius:10px; font-size:10px; padding:1px 6px; margin-left:2px; }
-  .pl-card { background:var(--surface); border:1px solid var(--line); border-radius:6px; padding:16px; }
-  .pl-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px; }
-  .pl-field { display:flex; flex-direction:column; gap:5px; }
+
+  .pl-tabs { display:flex; gap:4px; margin-bottom:18px; overflow-x:auto; padding-bottom:4px; -ms-overflow-style:none; scrollbar-width:none; }
+  .pl-tabs::-webkit-scrollbar { display:none; }
+  .pl-tab { position:relative; display:flex; align-items:center; gap:6px; background:transparent; border:1px solid transparent; color:var(--sub); padding:9px 13px; border-radius:7px; font-size:12.5px; font-family:inherit; cursor:pointer; white-space:nowrap; flex-shrink:0; transition:background .12s, color .12s; }
+  .pl-tab:active { background:var(--surface2); }
+  .pl-tab.active { background:var(--surface2); color:var(--ink); border-color:var(--line); }
+  .pl-tab.active::after { content:''; position:absolute; left:12px; right:12px; bottom:-5px; height:2px; background:var(--amber); border-radius:2px; }
+  .pl-count { background:var(--line); color:var(--ink); border-radius:10px; font-size:10px; padding:1.5px 6px; margin-left:1px; }
+  .pl-tab.active .pl-count { background:var(--amber); color:#1a1712; }
+
+  .pl-card { background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:17px; box-shadow:0 2px 8px rgba(0,0,0,0.18); }
+  .pl-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:15px; }
+  .pl-field { display:flex; flex-direction:column; gap:6px; }
   .pl-field.wide { grid-column:1 / -1; }
   .pl-field label { font-size:11px; color:var(--sub); }
-  .pl-input, .pl-select, textarea.pl-input { background:#181510; border:1px solid var(--line); color:var(--ink); padding:9px 10px; border-radius:4px; font-size:13px; font-family:inherit; outline:none; width:100%; }
+  .pl-input, .pl-select, textarea.pl-input {
+    background:var(--surface3); border:1px solid var(--line); color:var(--ink);
+    padding:10px 11px; border-radius:6px; font-size:13px; font-family:inherit; outline:none; width:100%;
+    transition:border-color .12s;
+  }
+  .pl-input:focus, .pl-select:focus, textarea.pl-input:focus { border-color:var(--amber-dim); }
   textarea.pl-input { resize:vertical; }
-  .pl-btn { display:flex; align-items:center; justify-content:center; gap:6px; width:100%; background:var(--amber); color:#1a1712; border:none; padding:11px; border-radius:5px; font-size:13px; font-weight:600; font-family:inherit; cursor:pointer; }
-  .pl-btn:disabled { opacity:0.6; }
-  .pl-btn-sm { background:var(--amber); color:#1a1712; border:none; padding:9px 14px; border-radius:4px; font-size:12.5px; font-weight:600; font-family:inherit; cursor:pointer; }
-  .pl-btn-outline { display:flex; align-items:center; gap:6px; background:transparent; border:1px solid var(--line); color:var(--ink); padding:9px 12px; border-radius:4px; font-size:12.5px; font-family:inherit; cursor:pointer; }
-  .pl-icon-btn { background:transparent; border:none; color:var(--sub); cursor:pointer; padding:4px; display:flex; align-items:center; font-size:14px; }
-  .pl-list { display:flex; flex-direction:column; gap:8px; }
-  .pl-row { display:flex; justify-content:space-between; align-items:center; gap:10px; background:var(--surface); border:1px solid var(--line); border-radius:6px; padding:10px 12px; flex-wrap:wrap; }
-  .pl-row-main { display:flex; align-items:center; gap:10px; min-width:0; }
-  .pl-row-right { display:flex; align-items:center; gap:8px; }
-  .pl-row-title { font-size:13.5px; color:var(--ink); }
-  .pl-row-sub { font-size:11px; color:var(--sub); margin-top:2px; }
-  .pl-tag { font-size:10.5px; color:var(--amber); border:1px solid rgba(217,154,61,0.35); border-radius:3px; padding:2px 6px; flex-shrink:0; white-space:nowrap; }
-  .pl-price { font-size:13.5px; font-weight:600; color:var(--ink); }
+
+  .pl-btn {
+    display:flex; align-items:center; justify-content:center; gap:6px; width:100%;
+    background:var(--amber); color:#1a1712; border:none; padding:12px; border-radius:7px;
+    font-size:13px; font-weight:600; font-family:inherit; cursor:pointer; transition:background .12s, transform .08s;
+  }
+  .pl-btn:active { transform:scale(0.985); background:var(--amber-dim); }
+  .pl-btn:disabled { opacity:0.5; }
+  .pl-btn-sm { background:var(--amber); color:#1a1712; border:none; padding:10px 16px; border-radius:6px; font-size:12.5px; font-weight:600; font-family:inherit; cursor:pointer; transition:background .12s; }
+  .pl-btn-sm:active { background:var(--amber-dim); }
+  .pl-btn-outline {
+    display:flex; align-items:center; justify-content:center; gap:6px; background:transparent;
+    border:1px solid var(--line); color:var(--ink); padding:10px 13px; border-radius:6px;
+    font-size:12.5px; font-family:inherit; cursor:pointer; transition:background .12s, border-color .12s;
+  }
+  .pl-btn-outline:active { background:var(--surface2); }
+  .pl-btn-outline:disabled { opacity:0.4; }
+  .pl-icon-btn {
+    background:transparent; border:none; color:var(--sub); cursor:pointer; padding:8px;
+    border-radius:6px; display:flex; align-items:center; font-size:14px; transition:background .12s, color .12s;
+  }
+  .pl-icon-btn:active { background:var(--surface2); color:var(--ink); }
+
+  .pl-list { display:flex; flex-direction:column; gap:9px; }
+  .pl-row {
+    display:flex; justify-content:space-between; align-items:center; gap:10px;
+    background:var(--surface); border:1px solid var(--line); border-radius:9px;
+    padding:12px 13px; flex-wrap:wrap; box-shadow:0 1px 4px rgba(0,0,0,0.14);
+  }
+  .pl-row-main { display:flex; align-items:center; gap:11px; min-width:0; }
+  .pl-row-right { display:flex; align-items:center; gap:6px; }
+  .pl-row-title { font-size:13.5px; color:var(--ink); font-weight:500; }
+  .pl-row-sub { font-size:11px; color:var(--sub); margin-top:3px; }
+  .pl-tag {
+    font-size:10.5px; color:var(--amber); border:1px solid rgba(221,159,66,0.3); background:rgba(221,159,66,0.07);
+    border-radius:4px; padding:3px 7px; flex-shrink:0; white-space:nowrap; font-weight:500;
+  }
+  .pl-price { font-size:14px; font-weight:600; color:var(--ink); }
   .pl-price-sm { font-size:12.5px; font-weight:600; color:var(--ink); }
-  .pl-assign-select { background:#181510; border:1px solid var(--line); color:var(--sub); font-size:11.5px; padding:6px 8px; border-radius:4px; font-family:inherit; }
-  .pl-newbuild-row { display:flex; gap:8px; margin-bottom:14px; }
-  .pl-build-card { background:var(--surface); border:1px solid var(--line); border-radius:6px; padding:14px; }
-  .pl-build-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px; }
-  .pl-status-pill { font-size:10.5px; padding:3px 8px; border-radius:10px; flex-shrink:0; }
-  .pl-status-assembling { background:#3a352c; color:var(--sub); }
-  .pl-status-sold { background:#233a2b; color:var(--good); }
-  .pl-build-parts { display:flex; flex-direction:column; gap:6px; padding:10px 0; border-top:1px solid var(--line); border-bottom:1px solid var(--line); margin-bottom:10px; }
+  .pl-assign-select { background:var(--surface3); border:1px solid var(--line); color:var(--sub); font-size:11.5px; padding:7px 8px; border-radius:6px; font-family:inherit; }
+  .pl-newbuild-row { display:flex; gap:8px; margin-bottom:16px; }
+
+  .pl-build-card {
+    position:relative; background:var(--surface); border:1px solid var(--line); border-radius:10px;
+    padding:15px 15px 15px 18px; box-shadow:0 2px 8px rgba(0,0,0,0.16); overflow:hidden;
+  }
+  .pl-build-card::before { content:''; position:absolute; left:0; top:0; bottom:0; width:3px; background:var(--line); }
+  .pl-build-card.pl-build-assembling::before { background:var(--amber); }
+  .pl-build-card.pl-build-sold::before { background:var(--good); }
+  .pl-build-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:11px; }
+  .pl-status-pill { font-size:10.5px; padding:3.5px 9px; border-radius:20px; flex-shrink:0; font-weight:500; }
+  .pl-status-assembling { background:rgba(221,159,66,0.14); color:var(--amber); }
+  .pl-status-sold { background:rgba(127,174,140,0.16); color:var(--good); }
+  .pl-build-parts { display:flex; flex-direction:column; gap:7px; padding:11px 0; border-top:1px solid var(--line-soft); border-bottom:1px solid var(--line-soft); margin-bottom:11px; }
   .pl-build-part-row { display:flex; align-items:center; gap:8px; font-size:12.5px; }
   .pl-cost-line { display:flex; justify-content:space-between; font-size:12.5px; color:var(--sub); margin-bottom:6px; }
   .pl-build-actions, .pl-sell-form { display:flex; gap:8px; margin-top:4px; flex-wrap:wrap; }
-  .pl-ledger-summary { display:flex; justify-content:space-between; font-size:12px; color:var(--sub); margin-bottom:10px; padding:0 2px; }
-  .pl-empty { display:flex; flex-direction:column; align-items:center; gap:10px; padding:48px 20px; text-align:center; color:var(--sub); font-size:13.5px; }
-  .pl-error-bar { display:flex; align-items:center; gap:6px; background:#3a2620; color:#e4a08f; padding:8px 12px; border-radius:4px; font-size:12px; margin-bottom:14px; }
-  .pl-mode-toggle { display:flex; gap:6px; margin-bottom:12px; }
-  .pl-mode-btn { display:flex; align-items:center; justify-content:center; gap:6px; flex:1; background:#181510; border:1px solid var(--line); color:var(--sub); padding:9px; border-radius:5px; font-size:12.5px; font-family:inherit; cursor:pointer; }
-  .pl-mode-btn.active { border-color:var(--amber); color:var(--amber); background:#221c12; }
-  .pl-dropzone { display:flex; flex-direction:column; align-items:center; gap:8px; width:100%; background:#181510; border:1px dashed var(--line); border-radius:6px; padding:28px 12px; color:var(--sub); font-size:12.5px; font-family:inherit; cursor:pointer; transition:border-color .15s, background .15s; }
-  .pl-dropzone.pl-drag-over { border-color:var(--amber); background:#221c12; color:var(--amber); }
-  .pl-preview-wrap.pl-drag-over { outline:2px solid var(--amber); }
-  .pl-preview-wrap { position:relative; cursor:pointer; border-radius:6px; overflow:hidden; border:1px solid var(--line); }
+  .pl-build-actions .pl-btn-outline { flex:1; }
+
+  .pl-ledger-summary { display:flex; justify-content:space-between; font-size:12px; color:var(--sub); margin-bottom:12px; padding:0 3px; }
+  .pl-empty {
+    display:flex; flex-direction:column; align-items:center; gap:12px; padding:52px 22px; text-align:center;
+    color:var(--sub); font-size:13px; background:var(--surface); border:1px dashed var(--line); border-radius:10px;
+  }
+  .pl-empty > *:first-child { font-size:26px; opacity:0.7; }
+  .pl-error-bar { display:flex; align-items:center; gap:7px; background:rgba(204,115,97,0.14); color:#e4a08f; padding:10px 13px; border-radius:7px; font-size:12px; margin-bottom:14px; }
+
+  .pl-mode-toggle { display:flex; gap:6px; margin-bottom:13px; background:var(--surface3); padding:4px; border-radius:8px; }
+  .pl-mode-btn {
+    display:flex; align-items:center; justify-content:center; gap:6px; flex:1; background:transparent;
+    border:none; color:var(--sub); padding:9px; border-radius:6px; font-size:12.5px; font-family:inherit; cursor:pointer; transition:background .12s, color .12s;
+  }
+  .pl-mode-btn.active { background:var(--surface2); color:var(--amber); }
+
+  .pl-dropzone {
+    display:flex; flex-direction:column; align-items:center; gap:9px; width:100%; background:var(--surface3);
+    border:1.5px dashed var(--line); border-radius:9px; padding:34px 14px; color:var(--sub); font-size:12px;
+    font-family:inherit; cursor:pointer; transition:border-color .15s, background .15s; text-align:center; line-height:1.6;
+  }
+  .pl-dropzone > *:first-child { font-size:24px; }
+  .pl-dropzone.pl-drag-over { border-color:var(--amber); background:rgba(221,159,66,0.06); color:var(--amber); }
+  .pl-preview-wrap.pl-drag-over { outline:2px solid var(--amber); outline-offset:2px; }
+  .pl-preview-wrap { position:relative; cursor:pointer; border-radius:9px; overflow:hidden; border:1px solid var(--line); }
   .pl-preview-wrap img { width:100%; max-height:220px; object-fit:cover; display:block; }
-  .pl-preview-hint { position:absolute; bottom:0; left:0; right:0; background:rgba(0,0,0,0.6); color:var(--ink); font-size:11px; padding:6px 8px; text-align:center; }
-  .pl-extracted-notice { display:flex; align-items:center; gap:6px; font-size:11.5px; color:var(--amber); margin-bottom:12px; }
+  .pl-preview-hint { position:absolute; bottom:0; left:0; right:0; background:rgba(0,0,0,0.65); color:var(--ink); font-size:11px; padding:8px; text-align:center; }
+  .pl-extracted-notice { display:flex; align-items:center; gap:7px; font-size:11.5px; color:var(--amber); margin-bottom:13px; padding:9px 11px; background:rgba(221,159,66,0.08); border-radius:7px; }
   .pl-spin { display:inline-block; animation:pl-spin 0.8s linear infinite; }
   @keyframes pl-spin { from { transform:rotate(0deg);} to { transform:rotate(360deg);} }
-  .pl-success { text-align:center; color:var(--good); display:flex; flex-direction:column; align-items:center; gap:8px; padding:32px; }
-  .pl-item-list { display:flex; flex-direction:column; gap:8px; margin-bottom:10px; }
-  .pl-item-row { display:grid; grid-template-columns:88px 1fr 90px auto; gap:6px; align-items:center; }
-  .pl-item-row .pl-select, .pl-item-row .pl-input { font-size:12.5px; padding:8px 8px; }
+  .pl-success { text-align:center; color:var(--good); display:flex; flex-direction:column; align-items:center; gap:9px; padding:36px; }
+  .pl-success > *:first-child { font-size:26px; }
+
+  .pl-item-list { display:flex; flex-direction:column; gap:9px; margin-bottom:12px; }
+  .pl-item-card { background:var(--surface3); border:1px solid var(--line); border-radius:8px; padding:10px; display:flex; flex-direction:column; gap:8px; }
+  .pl-item-top { display:flex; gap:7px; align-items:center; }
+  .pl-item-cat { flex:0 0 104px; }
+  .pl-item-price { flex:1 1 auto; min-width:0; }
+  .pl-item-top .pl-icon-btn { flex-shrink:0; margin-left:auto; }
+  .pl-item-card .pl-input, .pl-item-card .pl-select { font-size:12.5px; padding:8px 9px; }
 </style>
 <script>
 (function () {
@@ -134,7 +206,7 @@
     apiSettingsOpen: false,
     editingId: null,
     quick: { mode: "image", rawText: "", imagePreview: null, imageData: null, status: "idle", errorMsg: "", extracted: null, justAdded: false },
-    manual: { date: today(), site: "", items: [{ category: CATEGORIES[0], part: "", price: "" }], fee: "", justAdded: false },
+    manual: { date: today(), site: "", items: [{ category: CATEGORIES[0], part: "", price: "" }], fee: "", freeShipping: false, justAdded: false },
   };
 
   function setState(patch) {
@@ -224,7 +296,7 @@
 
 한 매물에 부품이 여러 개 함께 판매되는 경우(예: "CPU+메인보드 세트", "그래픽카드+파워 동시 판매")는 items 배열에 각 부품을 별도 항목으로 나눠서 담으세요. 세트 전체 가격만 있고 개별 가격이 없으면, 부품별로 합리적으로 가격을 나눠서 채우세요(예: 시세 비율 고려). 부품이 하나뿐이면 items 배열에 항목 하나만 넣으세요.
 
-{"items": [{"part": "부품명(모델명 포함, 없으면 빈 문자열)", "category": "CPU, GPU, 메인보드, RAM, 저장장치, 파워, 케이스, 쿨러, 기타 중 가장 가까운 하나", "price": 숫자만(원 단위, 콤마·원·₩ 등 기호 제외, 모르면 0)}], "site": "당근마켓, 번개장터, 중고나라, 다나와장터 중 하나로 추정, 확실하지 않으면 빈 문자열"}`;
+{"items": [{"part": "부품명(모델명 포함, 없으면 빈 문자열)", "category": "CPU, GPU, 메인보드, RAM, 저장장치, 파워, 케이스, 쿨러, 기타 중 가장 가까운 하나", "price": 숫자만(원 단위, 콤마·원·₩ 등 기호 제외, 모르면 0)}], "site": "당근마켓, 번개장터, 중고나라, 다나와장터 중 하나로 추정, 확실하지 않으면 빈 문자열", "free_shipping": 이미지나 텍스트에 "무료배송" 문구가 명시되어 있으면 true, 없거나 확실하지 않으면 false}`;
 
   function getApiKey() {
     try { return (localStorage.getItem("parts-ledger:api-key") || "").trim(); } catch (e) { return ""; }
@@ -392,17 +464,20 @@
         q.rawText = input;
       }
       let site = guessSite(result.site);
+      const freeShipping = !!result.free_shipping;
       const rawItems = Array.isArray(result.items) && result.items.length ? result.items : [result];
       const items = rawItems.map((it) => ({
         category: CATEGORIES.includes(it.category) ? it.category : "기타",
         part: it.part || "",
         price: it.price ? String(it.price) : "",
       }));
+      const totalPrice = items.reduce((s, it) => s + (Number(it.price) || 0), 0);
+      const fee = site ? String(calcSuggestedFee(site, totalPrice, freeShipping)) : "";
       setState({
         quick: {
           ...q,
           status: "done",
-          extracted: { date: today(), site, items, fee: "" },
+          extracted: { date: today(), site, items, fee, freeShipping },
         },
       });
     } catch (e) {
@@ -426,32 +501,40 @@
     persistFeeConfig(fc);
   };
 
-  function calcSuggestedFee(site, totalPrice) {
+  function calcSuggestedFee(site, totalPrice, freeShipping) {
     const fc = state.feeConfig || DEFAULT_FEE_CONFIG;
     const rate = fc.rates?.[site] ?? 0;
-    const shipping = fc.shipping ?? 0;
+    const shipping = freeShipping ? 0 : (fc.shipping ?? 0);
     return Math.round(totalPrice * (rate / 100)) + shipping;
   }
 
   window.plAutoCalcExtractedFee = function () {
     const ex = state.quick.extracted;
     const total = ex.items.reduce((s, it) => s + (Number(it.price) || 0), 0);
-    ex.fee = String(calcSuggestedFee(ex.site, total));
+    ex.fee = String(calcSuggestedFee(ex.site, total, ex.freeShipping));
     render();
   };
 
   window.plAutoCalcManualFee = function () {
     const m = state.manual;
     const total = m.items.reduce((s, it) => s + (Number(it.price) || 0), 0);
-    m.fee = String(calcSuggestedFee(m.site, total));
+    m.fee = String(calcSuggestedFee(m.site, total, m.freeShipping));
     render();
+  };
+
+  window.plToggleExtractedFreeShipping = function (checked) {
+    state.quick.extracted.freeShipping = checked;
+  };
+
+  window.plToggleManualFreeShipping = function (checked) {
+    state.manual.freeShipping = checked;
   };
 
   window.plUpdateExtractedMeta = function (key, val) {
     state.quick.extracted[key] = val;
     if (key === "site" && !state.quick.extracted.fee) {
       const total = state.quick.extracted.items.reduce((s, it) => s + (Number(it.price) || 0), 0);
-      state.quick.extracted.fee = String(calcSuggestedFee(val, total));
+      state.quick.extracted.fee = String(calcSuggestedFee(val, total, state.quick.extracted.freeShipping));
       render();
     }
   };
@@ -511,7 +594,7 @@
     state.manual[key] = val;
     if (key === "site" && !state.manual.fee) {
       const total = state.manual.items.reduce((s, it) => s + (Number(it.price) || 0), 0);
-      state.manual.fee = String(calcSuggestedFee(val, total));
+      state.manual.fee = String(calcSuggestedFee(val, total, state.manual.freeShipping));
       render();
     }
   };
@@ -536,7 +619,7 @@
     const m = state.manual;
     const added = distributeAndAdd(m, m.items);
     if (added === 0) return;
-    setState({ manual: { date: m.date, site: m.site, fee: "", items: [{ category: CATEGORIES[0], part: "", price: "" }], justAdded: true } });
+    setState({ manual: { date: m.date, site: m.site, fee: "", freeShipping: false, items: [{ category: CATEGORIES[0], part: "", price: "" }], justAdded: true } });
     setTimeout(() => setState({ manual: { ...state.manual, justAdded: false } }), 1200);
   };
 
@@ -595,6 +678,12 @@
               </select>
             </div>
             <div class="pl-field wide">
+              <label style="display:flex; align-items:center; gap:6px; cursor:pointer; font-size:12px; color:${ex.freeShipping ? "var(--amber)" : "var(--sub)"};">
+                <input type="checkbox" ${ex.freeShipping ? "checked" : ""} onchange="plToggleExtractedFreeShipping(this.checked)" style="accent-color:var(--amber); width:14px; height:14px;">
+                무료배송 (이미지에서 감지됨 — 체크하면 택배비 자동계산에서 제외)
+              </label>
+            </div>
+            <div class="pl-field wide">
               <label>수수료+배송비 (선택) — 부품 가격에 비례 배분됩니다</label>
               <div style="display:flex; gap:6px;">
                 <input class="pl-input" type="number" min="0" value="${esc(ex.fee || "")}" placeholder="0" oninput="plUpdateExtractedMeta('fee', this.value)">
@@ -606,13 +695,15 @@
             ${ex.items
               .map(
                 (it, idx) => `
-              <div class="pl-item-row">
-                <select class="pl-select pl-item-cat" oninput="plUpdateExtractedItem(${idx}, 'category', this.value)">
-                  ${CATEGORIES.map((c) => `<option value="${c}" ${c === it.category ? "selected" : ""}>${c}</option>`).join("")}
-                </select>
+              <div class="pl-item-card">
+                <div class="pl-item-top">
+                  <select class="pl-select pl-item-cat" oninput="plUpdateExtractedItem(${idx}, 'category', this.value)">
+                    ${CATEGORIES.map((c) => `<option value="${c}" ${c === it.category ? "selected" : ""}>${c}</option>`).join("")}
+                  </select>
+                  <input class="pl-input pl-item-price" type="number" min="0" value="${esc(it.price)}" placeholder="가격" oninput="plUpdateExtractedItem(${idx}, 'price', this.value)">
+                  ${ex.items.length > 1 ? `<button type="button" class="pl-icon-btn" onclick="plRemoveExtractedItem(${idx})">${iconX()}</button>` : ""}
+                </div>
                 <input class="pl-input pl-item-part" type="text" value="${esc(it.part)}" placeholder="부품명 / 모델명" oninput="plUpdateExtractedItem(${idx}, 'part', this.value)">
-                <input class="pl-input pl-item-price" type="number" min="0" value="${esc(it.price)}" placeholder="가격" oninput="plUpdateExtractedItem(${idx}, 'price', this.value)">
-                ${ex.items.length > 1 ? `<button type="button" class="pl-icon-btn" onclick="plRemoveExtractedItem(${idx})">${iconX()}</button>` : ""}
               </div>`
               )
               .join("")}
@@ -668,6 +759,12 @@
             </select>
           </div>
           <div class="pl-field wide">
+            <label style="display:flex; align-items:center; gap:6px; cursor:pointer; font-size:12px; color:${m.freeShipping ? "var(--amber)" : "var(--sub)"};">
+              <input type="checkbox" ${m.freeShipping ? "checked" : ""} onchange="plToggleManualFreeShipping(this.checked)" style="accent-color:var(--amber); width:14px; height:14px;">
+              무료배송 (체크하면 택배비 자동계산에서 제외)
+            </label>
+          </div>
+          <div class="pl-field wide">
             <label>수수료+배송비 (선택) — 부품 가격에 비례 배분됩니다</label>
             <div style="display:flex; gap:6px;">
               <input class="pl-input" type="number" min="0" value="${esc(m.fee || "")}" placeholder="0" oninput="plUpdateManualMeta('fee', this.value)">
@@ -679,13 +776,15 @@
           ${m.items
             .map(
               (it, idx) => `
-            <div class="pl-item-row">
-              <select class="pl-select pl-item-cat" oninput="plUpdateManualItem(${idx}, 'category', this.value)">
-                ${CATEGORIES.map((c) => `<option value="${c}" ${c === it.category ? "selected" : ""}>${c}</option>`).join("")}
-              </select>
+            <div class="pl-item-card">
+              <div class="pl-item-top">
+                <select class="pl-select pl-item-cat" oninput="plUpdateManualItem(${idx}, 'category', this.value)">
+                  ${CATEGORIES.map((c) => `<option value="${c}" ${c === it.category ? "selected" : ""}>${c}</option>`).join("")}
+                </select>
+                <input class="pl-input pl-item-price" type="number" min="0" value="${esc(it.price)}" placeholder="가격" oninput="plUpdateManualItem(${idx}, 'price', this.value)">
+                ${m.items.length > 1 ? `<button type="button" class="pl-icon-btn" onclick="plRemoveManualItem(${idx})">${iconX()}</button>` : ""}
+              </div>
               <input class="pl-input pl-item-part" type="text" value="${esc(it.part)}" placeholder="부품명 / 모델명" oninput="plUpdateManualItem(${idx}, 'part', this.value)">
-              <input class="pl-input pl-item-price" type="number" min="0" value="${esc(it.price)}" placeholder="가격" oninput="plUpdateManualItem(${idx}, 'price', this.value)">
-              ${m.items.length > 1 ? `<button type="button" class="pl-icon-btn" onclick="plRemoveManualItem(${idx})">${iconX()}</button>` : ""}
             </div>`
             )
             .join("")}
@@ -794,7 +893,7 @@
     const profit = b.salePrice != null ? b.salePrice - cost : null;
     const selling = state._selling === b.id;
     return `
-      <div class="pl-build-card">
+      <div class="pl-build-card ${b.status === "sold" ? "pl-build-sold" : "pl-build-assembling"}">
         <div class="pl-build-header">
           <div>
             <div class="pl-row-title">${esc(b.name)}</div>
@@ -874,7 +973,7 @@
         </div>
         <div class="pl-headstat"><b>${stockCount}</b><span>재고 부품 · ${won(stockValue)}</span></div>
       </div>
-      <div style="display:flex; justify-content:flex-end; gap:8px; margin-bottom:${state.settingsOpen || state.apiSettingsOpen ? "8" : "14"}px;">
+      <div style="display:flex; justify-content:flex-end; margin-bottom:${state.settingsOpen || state.apiSettingsOpen ? "8" : "14"}px;">
         <button class="pl-icon-btn" style="font-size:11px; gap:4px; border:1px solid var(--line); border-radius:4px; padding:5px 9px;" onclick="plToggleFeeSettings()">⚙ 수수료·배송비 설정</button>
         <button class="pl-icon-btn" style="font-size:11px; gap:4px; border:1px solid var(--line); border-radius:4px; padding:5px 9px;" onclick="plToggleApiSettings()">⚙ API 키 ${getApiKey() ? `설정됨 (${maskKey(getApiKey())})` : "설정 안 됨"}</button>
       </div>
@@ -948,7 +1047,7 @@
         break;
       }
     }
-    if (!imageFile) return;
+    if (!imageFile) return; // no image on clipboard, let normal text paste behave as usual
     e.preventDefault();
     setState({ tab: "quick", quick: { ...state.quick, mode: "image", errorMsg: "" } });
     processImageFile(imageFile);
