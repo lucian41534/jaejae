@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<title>부품 재고 대장</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1a1712">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="부품장부">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<style>
+  html, body { margin:0; padding:0; background:#1a1712; min-height:100vh; }
+</style>
+</head>
+<body>
+<div id="pl-root"></div>
+<style>
+  #pl-root {
+    --ink: #e9e4d8;
+    --sub: #9a9284;
+    --surface: #232019;
+    --surface2: #2b2720;
+    --line: #3a352c;
+    --amber: #d99a3d;
+    --good: #7fae8c;
+    --bad: #c96a5a;
+    font-family: 'IBM Plex Mono', 'Menlo', monospace;
+    background: #1a1712;
+    color: var(--ink);
+    padding: 20px 16px 40px;
+    font-size: 13.5px;
+    box-sizing: border-box;
+    min-height: 100%;
+  }
+  #pl-root * { box-sizing: border-box; }
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&display=swap');
+  .pl-header { display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:20px; padding-bottom:16px; border-bottom:1px solid var(--line); }
+  .pl-kicker { font-size:11px; letter-spacing:1px; color:var(--amber); margin-bottom:4px; }
+  .pl-title { font-family:'Source Serif 4', serif; font-size:26px; font-weight:700; margin:0; color:var(--ink); }
+  .pl-headstat { text-align:right; }
+  .pl-headstat b { display:block; font-size:20px; font-weight:600; color:var(--amber); }
+  .pl-headstat span { font-size:10.5px; color:var(--sub); }
+  .pl-tabs { display:flex; gap:6px; margin-bottom:18px; overflow-x:auto; padding-bottom:2px; }
+  .pl-tab { display:flex; align-items:center; gap:6px; background:transparent; border:1px solid var(--line); color:var(--sub); padding:8px 12px; border-radius:5px; font-size:12.5px; font-family:inherit; cursor:pointer; white-space:nowrap; flex-shrink:0; }
+  .pl-tab.active { background:var(--surface2); color:var(--ink); border-color:var(--amber); }
+  .pl-count { background:var(--line); color:var(--ink); border-radius:10px; font-size:10px; padding:1px 6px; margin-left:2px; }
+  .pl-card { background:var(--surface); border:1px solid var(--line); border-radius:6px; padding:16px; }
+  .pl-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px; }
+  .pl-field { display:flex; flex-direction:column; gap:5px; }
+  .pl-field.wide { grid-column:1 / -1; }
+  .pl-field label { font-size:11px; color:var(--sub); }
+  .pl-input, .pl-select, textarea.pl-input { background:#181510; border:1px solid var(--line); color:var(--ink); padding:9px 10px; border-radius:4px; font-size:13px; font-family:inherit; outline:none; width:100%; }
+  textarea.pl-input { resize:vertical; }
+  .pl-btn { display:flex; align-items:center; justify-content:center; gap:6px; width:100%; background:var(--amber); color:#1a1712; border:none; padding:11px; border-radius:5px; font-size:13px; font-weight:600; font-family:inherit; cursor:pointer; }
+  .pl-btn:disabled { opacity:0.6; }
+  .pl-btn-sm { background:var(--amber); color:#1a1712; border:none; padding:9px 14px; border-radius:4px; font-size:12.5px; font-weight:600; font-family:inherit; cursor:pointer; }
+  .pl-btn-outline { display:flex; align-items:center; gap:6px; background:transparent; border:1px solid var(--line); color:var(--ink); padding:9px 12px; border-radius:4px; font-size:12.5px; font-family:inherit; cursor:pointer; }
+  .pl-icon-btn { background:transparent; border:none; color:var(--sub); cursor:pointer; padding:4px; display:flex; align-items:center; font-size:14px; }
+  .pl-list { display:flex; flex-direction:column; gap:8px; }
+  .pl-row { display:flex; justify-content:space-between; align-items:center; gap:10px; background:var(--surface); border:1px solid var(--line); border-radius:6px; padding:10px 12px; flex-wrap:wrap; }
+  .pl-row-main { display:flex; align-items:center; gap:10px; min-width:0; }
+  .pl-row-right { display:flex; align-items:center; gap:8px; }
+  .pl-row-title { font-size:13.5px; color:var(--ink); }
+  .pl-row-sub { font-size:11px; color:var(--sub); margin-top:2px; }
+  .pl-tag { font-size:10.5px; color:var(--amber); border:1px solid rgba(217,154,61,0.35); border-radius:3px; padding:2px 6px; flex-shrink:0; white-space:nowrap; }
+  .pl-price { font-size:13.5px; font-weight:600; color:var(--ink); }
+  .pl-price-sm { font-size:12.5px; font-weight:600; color:var(--ink); }
+  .pl-assign-select { background:#181510; border:1px solid var(--line); color:var(--sub); font-size:11.5px; padding:6px 8px; border-radius:4px; font-family:inherit; }
+  .pl-newbuild-row { display:flex; gap:8px; margin-bottom:14px; }
+  .pl-build-card { background:var(--surface); border:1px solid var(--line); border-radius:6px; padding:14px; }
+  .pl-build-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px; }
+  .pl-status-pill { font-size:10.5px; padding:3px 8px; border-radius:10px; flex-shrink:0; }
+  .pl-status-assembling { background:#3a352c; color:var(--sub); }
+  .pl-status-sold { background:#233a2b; color:var(--good); }
+  .pl-build-parts { display:flex; flex-direction:column; gap:6px; padding:10px 0; border-top:1px solid var(--line); border-bottom:1px solid var(--line); margin-bottom:10px; }
+  .pl-build-part-row { display:flex; align-items:center; gap:8px; font-size:12.5px; }
+  .pl-cost-line { display:flex; justify-content:space-between; font-size:12.5px; color:var(--sub); margin-bottom:6px; }
+  .pl-build-actions, .pl-sell-form { display:flex; gap:8px; margin-top:4px; flex-wrap:wrap; }
+  .pl-ledger-summary { display:flex; justify-content:space-between; font-size:12px; color:var(--sub); margin-bottom:10px; padding:0 2px; }
+  .pl-empty { display:flex; flex-direction:column; align-items:center; gap:10px; padding:48px 20px; text-align:center; color:var(--sub); font-size:13.5px; }
+  .pl-error-bar { display:flex; align-items:center; gap:6px; background:#3a2620; color:#e4a08f; padding:8px 12px; border-radius:4px; font-size:12px; margin-bottom:14px; }
+  .pl-mode-toggle { display:flex; gap:6px; margin-bottom:12px; }
+  .pl-mode-btn { display:flex; align-items:center; justify-content:center; gap:6px; flex:1; background:#181510; border:1px solid var(--line); color:var(--sub); padding:9px; border-radius:5px; font-size:12.5px; font-family:inherit; cursor:pointer; }
+  .pl-mode-btn.active { border-color:var(--amber); color:var(--amber); background:#221c12; }
+  .pl-dropzone { display:flex; flex-direction:column; align-items:center; gap:8px; width:100%; background:#181510; border:1px dashed var(--line); border-radius:6px; padding:28px 12px; color:var(--sub); font-size:12.5px; font-family:inherit; cursor:pointer; }
+  .pl-preview-wrap { position:relative; cursor:pointer; border-radius:6px; overflow:hidden; border:1px solid var(--line); }
+  .pl-preview-wrap img { width:100%; max-height:220px; object-fit:cover; display:block; }
+  .pl-preview-hint { position:absolute; bottom:0; left:0; right:0; background:rgba(0,0,0,0.6); color:var(--ink); font-size:11px; padding:6px 8px; text-align:center; }
+  .pl-extracted-notice { display:flex; align-items:center; gap:6px; font-size:11.5px; color:var(--amber); margin-bottom:12px; }
+  .pl-spin { display:inline-block; animation:pl-spin 0.8s linear infinite; }
+  @keyframes pl-spin { from { transform:rotate(0deg);} to { transform:rotate(360deg);} }
+  .pl-success { text-align:center; color:var(--good); display:flex; flex-direction:column; align-items:center; gap:8px; padding:32px; }
+</style>
+<script>
+(function () {
+  const CATEGORIES = ["CPU", "GPU", "메인보드", "RAM", "저장장치", "파워", "케이스", "쿨러", "기타"];
+  const root = document.getElementById("pl-root");
+  const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  const won = (n) => (Number(n) || 0).toLocaleString("ko-KR") + "원";
+  const today = () => new Date().toISOString().slice(0, 10);
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+  let state = {
+    purchases: [],
+    builds: [],
+    tab: "quick",
+    loaded: false,
+    error: "",
+    quick: { mode: "image", rawText: "", imagePreview: null, imageData: null, status: "idle", errorMsg: "", extracted: null, justAdded: false },
+  };
+
+  function setState(patch) {
+    state = { ...state, ...patch };
+    render();
+  }
+
+  function loadData() {
+    let p = [], b = [];
+    try {
+      const rp = localStorage.getItem("parts-ledger:purchases");
+      if (rp) p = JSON.parse(rp);
+      const rb = localStorage.getItem("parts-ledger:builds");
+      if (rb) b = JSON.parse(rb);
+    } catch (e) {
+      setState({ error: "데이터를 불러오지 못했습니다." });
+    }
+    setState({ purchases: p, builds: b, loaded: true });
+  }
+
+  function persist(nextPurchases, nextBuilds) {
+    try {
+      if (nextPurchases) localStorage.setItem("parts-ledger:purchases", JSON.stringify(nextPurchases));
+      if (nextBuilds) localStorage.setItem("parts-ledger:builds", JSON.stringify(nextBuilds));
+    } catch (e) {
+      setState({ error: "저장에 실패했습니다. 다시 시도해주세요." });
+    }
+  }
+
+  function addPurchase(entry) {
+    const next = [{ id: uid(), status: "stock", buildId: null, ...entry }, ...state.purchases];
+    setState({ purchases: next });
+    persist(next, null);
+  }
+
+  function deletePurchase(id) {
+    const next = state.purchases.filter((p) => p.id !== id);
+    setState({ purchases: next });
+    persist(next, null);
+  }
+
+  function addBuild(name) {
+    const b = { id: uid(), name, createdDate: today(), status: "assembling", soldDate: null, salePrice: null, buyer: "" };
+    const next = [b, ...state.builds];
+    setState({ builds: next });
+    persist(null, next);
+  }
+
+  function assignPart(partId, buildId) {
+    const next = state.purchases.map((p) => (p.id === partId ? { ...p, status: buildId ? "assigned" : "stock", buildId: buildId || null } : p));
+    setState({ purchases: next });
+    persist(next, null);
+  }
+
+  function sellBuild(buildId, salePrice, buyer) {
+    const nb = state.builds.map((b) => (b.id === buildId ? { ...b, status: "sold", soldDate: today(), salePrice, buyer } : b));
+    const np = state.purchases.map((p) => (p.buildId === buildId ? { ...p, status: "sold" } : p));
+    setState({ builds: nb, purchases: np });
+    persist(np, nb);
+  }
+
+  function deleteBuild(buildId) {
+    const np = state.purchases.map((p) => (p.buildId === buildId ? { ...p, status: "stock", buildId: null } : p));
+    const nb = state.builds.filter((b) => b.id !== buildId);
+    setState({ purchases: np, builds: nb });
+    persist(np, nb);
+  }
+
+  const EXTRACT_PROMPT = `다음은 중고 PC 부품 거래 매물의 캡처 이미지 또는 텍스트입니다.
+이 매물에서 정보를 추출해서 아래 JSON 형식으로만 답하세요. 설명, 코드블록, 다른 텍스트 없이 JSON 객체 하나만 출력하세요.
+
+{"part": "부품명(모델명 포함, 없으면 빈 문자열)", "category": "CPU, GPU, 메인보드, RAM, 저장장치, 파워, 케이스, 쿨러, 기타 중 가장 가까운 하나", "price": 숫자만(원 단위, 콤마·원·₩ 등 기호 제외, 모르면 0), "site": "당근마켓/번개장터/중고나라/기타 중 추정되는 것, 모르면 빈 문자열"}`;
+
+  async function callClaudeExtract(content) {
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ model: "claude-sonnet-4-6", max_tokens: 400, messages: [{ role: "user", content }] }),
+    });
+    if (!response.ok) throw new Error("API 요청 실패");
+    const data = await response.json();
+    const raw = (data.content || []).map((b) => b.text || "").join("");
+    const clean = raw.replace(/```json|```/g, "").trim();
+    const match = clean.match(/\{[\s\S]*\}/);
+    if (!match) throw new Error("응답을 해석할 수 없습니다");
+    return JSON.parse(match[0]);
+  }
+
+  function fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+      const r = new FileReader();
+      r.onload = () => resolve(r.result.split(",")[1]);
+      r.onerror = () => reject(new Error("이미지를 읽지 못했습니다"));
+      r.readAsDataURL(file);
+    });
+  }
+
+  window.plHandleFile = async function (input) {
+    const file = input.files && input.files[0];
+    if (!file) return;
+    const preview = URL.createObjectURL(file);
+    setState({ quick: { ...state.quick, imagePreview: preview } });
+    try {
+      const base64 = await fileToBase64(file);
+      setState({ quick: { ...state.quick, imagePreview: preview, imageData: { base64, mediaType: file.type || "image/jpeg" } } });
+    } catch (e) {
+      setState({ quick: { ...state.quick, errorMsg: "이미지를 읽는 데 실패했습니다." } });
+    }
+  };
+
+  window.plSetMode = function (mode) {
+    setState({ quick: { ...state.quick, mode, status: "idle", errorMsg: "" } });
+  };
+
+  window.plSetRawText = function (val) {
+    state.quick.rawText = val; // avoid full re-render on every keystroke
+  };
+
+  window.plRunExtract = async function () {
+    const q = state.quick;
+    setState({ quick: { ...q, status: "extracting", errorMsg: "" } });
+    try {
+      let result;
+      if (q.mode === "image") {
+        if (!q.imageData) throw new Error("이미지를 먼저 선택해주세요.");
+        result = await callClaudeExtract([
+          { type: "image", source: { type: "base64", media_type: q.imageData.mediaType, data: q.imageData.base64 } },
+          { type: "text", text: EXTRACT_PROMPT },
+        ]);
+      } else {
+        const input = (document.getElementById("pl-rawtext")?.value || "").trim();
+        if (!input) throw new Error("링크 또는 텍스트를 입력해주세요.");
+        if (/^https?:\/\//i.test(input) && !/\s/.test(input)) {
+          try {
+            const pageRes = await fetch(input);
+            const pageText = await pageRes.text();
+            result = await callClaudeExtract([{ type: "text", text: `${EXTRACT_PROMPT}\n\n페이지 내용:\n${pageText.slice(0, 6000)}` }]);
+          } catch (fetchErr) {
+            throw new Error("이 링크는 앱에서 직접 열 수 없습니다. 매물 페이지에서 제목과 가격을 복사해서 붙여넣어주세요.");
+          }
+        } else {
+          result = await callClaudeExtract([{ type: "text", text: `${EXTRACT_PROMPT}\n\n내용:\n${input}` }]);
+        }
+        q.rawText = input;
+      }
+      let site = result.site || "";
+      if (!site && q.mode === "text" && /^https?:\/\//i.test(q.rawText.trim())) {
+        try { site = new URL(q.rawText.trim()).hostname.replace("www.", ""); } catch (e) {}
+      }
+      setState({
+        quick: {
+          ...q,
+          status: "done",
+          extracted: {
+            date: today(),
+            site,
+            category: CATEGORIES.includes(result.category) ? result.category : "기타",
+            part: result.part || "",
+            price: result.price ? String(result.price) : "",
+          },
+        },
+      });
+    } catch (e) {
+      setState({ quick: { ...state.quick, status: "error", errorMsg: e.message || "추출에 실패했습니다." } });
+    }
+  };
+
+  window.plUpdateExtracted = function (key, val) {
+    state.quick.extracted[key] = val;
+  };
+
+  window.plConfirmAdd = function () {
+    const ex = state.quick.extracted;
+    if (!ex.part.trim() || !ex.price) return;
+    addPurchase({ ...ex, price: Number(ex.price) });
+    setState({ quick: { mode: state.quick.mode, rawText: "", imagePreview: null, imageData: null, status: "idle", errorMsg: "", extracted: null, justAdded: true } });
+    setTimeout(() => setState({ quick: { mode: state.quick.mode, rawText: "", imagePreview: null, imageData: null, status: "idle", errorMsg: "", extracted: null, justAdded: false } }), 1200);
+  };
+
+  window.plResetQuick = function () {
+    setState({ quick: { mode: state.quick.mode, rawText: "", imagePreview: null, imageData: null, status: "idle", errorMsg: "", extracted: null, justAdded: false } });
+  };
+
+  window.plSetTab = function (t) { setState({ tab: t }); };
+
+  window.plAddManual = function (ev) {
+    ev.preventDefault();
+    const f = ev.target;
+    const part = f.part.value.trim();
+    const price = f.price.value;
+    if (!part || !price) return;
+    addPurchase({ date: f.date.value, site: f.site.value, category: f.category.value, part, price: Number(price) });
+    f.part.value = ""; f.price.value = "";
+    const btn = document.getElementById("pl-manual-btn");
+    if (btn) { btn.textContent = "✓ 등록됨"; setTimeout(() => { if (btn) btn.textContent = "+ 재고에 추가"; }, 1400); }
+  };
+
+  window.plCreateBuild = function () {
+    const input = document.getElementById("pl-newbuild-input");
+    if (!input || !input.value.trim()) return;
+    addBuild(input.value.trim());
+    input.value = "";
+  };
+
+  window.plAssign = function (partId, sel) {
+    if (sel.value) assignPart(partId, sel.value);
+  };
+
+  window.plUnassign = function (partId) { assignPart(partId, null); };
+  window.plDeletePurchase = function (id) { deletePurchase(id); };
+  window.plDeleteBuild = function (id) { deleteBuild(id); };
+
+  window.plStartSell = function (buildId) {
+    state._selling = buildId;
+    render();
+  };
+
+  window.plConfirmSell = function (buildId) {
+    const price = document.getElementById("pl-sell-price-" + buildId)?.value;
+    const buyer = document.getElementById("pl-sell-buyer-" + buildId)?.value || "";
+    if (!price) return;
+    state._selling = null;
+    sellBuild(buildId, Number(price), buyer);
+  };
+
+  function iconTag() { return '<span style="font-size:13px;">🏷</span>'; }
+  function iconSparkle() { return '<span>✦</span>'; }
+  function iconImg() { return '<span>🖼</span>'; }
+  function iconLink() { return '<span>🔗</span>'; }
+  function iconCheck() { return '<span>✓</span>'; }
+  function iconX() { return '<span>✕</span>'; }
+  function iconWarn() { return '<span>⚠</span>'; }
+
+  function renderQuick() {
+    const q = state.quick;
+    if (q.justAdded) {
+      return `<div class="pl-card pl-success">${iconCheck()}<div>재고에 추가됐습니다</div></div>`;
+    }
+    if (q.extracted) {
+      const ex = q.extracted;
+      return `
+        <div class="pl-card">
+          <div class="pl-extracted-notice">${iconSparkle()} 자동으로 읽은 정보예요. 틀린 부분은 고쳐주세요.</div>
+          <div class="pl-grid">
+            <div class="pl-field"><label>구매일</label><input class="pl-input" type="date" value="${esc(ex.date)}" oninput="plUpdateExtracted('date', this.value)"></div>
+            <div class="pl-field"><label>구매 사이트</label><input class="pl-input" type="text" value="${esc(ex.site)}" placeholder="당근마켓, 번개장터..." oninput="plUpdateExtracted('site', this.value)"></div>
+            <div class="pl-field"><label>분류</label><select class="pl-select" oninput="plUpdateExtracted('category', this.value)">
+              ${CATEGORIES.map((c) => `<option value="${c}" ${c === ex.category ? "selected" : ""}>${c}</option>`).join("")}
+            </select></div>
+            <div class="pl-field"><label>가격</label><input class="pl-input" type="number" min="0" value="${esc(ex.price)}" oninput="plUpdateExtracted('price', this.value)"></div>
+            <div class="pl-field wide"><label>부품명 / 모델명</label><input class="pl-input" type="text" value="${esc(ex.part)}" oninput="plUpdateExtracted('part', this.value)"></div>
+          </div>
+          <div style="display:flex; gap:8px;">
+            <button class="pl-btn" onclick="plConfirmAdd()">${iconCheck()} 재고에 추가</button>
+            <button class="pl-btn-outline" onclick="plResetQuick()">다시 하기</button>
+          </div>
+        </div>`;
+    }
+    return `
+      <div class="pl-card">
+        <div class="pl-mode-toggle">
+          <button class="pl-mode-btn ${q.mode === "image" ? "active" : ""}" onclick="plSetMode('image')">${iconImg()} 캡처 이미지</button>
+          <button class="pl-mode-btn ${q.mode === "text" ? "active" : ""}" onclick="plSetMode('text')">${iconLink()} 링크 / 텍스트</button>
+        </div>
+        ${
+          q.mode === "image"
+            ? `<div>
+                <input id="pl-file-input" type="file" accept="image/*" style="display:none" onchange="plHandleFile(this)">
+                ${
+                  q.imagePreview
+                    ? `<div class="pl-preview-wrap" onclick="document.getElementById('pl-file-input').click()">
+                        <img src="${q.imagePreview}" alt="매물 캡처">
+                        <span class="pl-preview-hint">탭해서 다른 이미지 선택</span>
+                      </div>`
+                    : `<button class="pl-dropzone" onclick="document.getElementById('pl-file-input').click()">${iconImg()}<span>매물 캡처 이미지 선택</span></button>`
+                }
+              </div>`
+            : `<textarea id="pl-rawtext" class="pl-input" rows="4" placeholder="매물 링크를 붙여넣거나, 매물 제목·가격을 복사해서 붙여넣으세요">${esc(q.rawText)}</textarea>`
+        }
+        ${q.errorMsg ? `<div class="pl-error-bar">${iconWarn()} ${esc(q.errorMsg)}</div>` : ""}
+        <button class="pl-btn" style="margin-top:12px;" onclick="plRunExtract()" ${q.status === "extracting" ? "disabled" : ""}>
+          ${q.status === "extracting" ? `<span class="pl-spin">⟳</span> 읽는 중...` : `${iconSparkle()} 정보 추출하기`}
+        </button>
+      </div>`;
+  }
+
+  function renderManual() {
+    return `
+      <form class="pl-card" onsubmit="plAddManual(event)">
+        <div class="pl-grid">
+          <div class="pl-field"><label>구매일</label><input class="pl-input" type="date" name="date" value="${today()}"></div>
+          <div class="pl-field"><label>구매 사이트</label><input class="pl-input" type="text" name="site" placeholder="당근마켓, 번개장터..."></div>
+          <div class="pl-field"><label>분류</label><select class="pl-select" name="category">${CATEGORIES.map((c) => `<option value="${c}">${c}</option>`).join("")}</select></div>
+          <div class="pl-field"><label>가격</label><input class="pl-input" type="number" name="price" min="0" placeholder="0"></div>
+          <div class="pl-field wide"><label>부품명 / 모델명</label><input class="pl-input" type="text" name="part" placeholder="예: 라이젠 5 5600, RTX 3060 12GB"></div>
+        </div>
+        <button id="pl-manual-btn" class="pl-btn" type="submit">+ 재고에 추가</button>
+      </form>`;
+  }
+
+  function renderStock() {
+    const parts = state.purchases.filter((p) => p.status === "stock");
+    const openBuilds = state.builds.filter((b) => b.status === "assembling");
+    if (parts.length === 0) return `<div class="pl-empty">📦<div>재고에 있는 부품이 없습니다. '빠른 등록' 또는 '직접 입력'에서 매입한 부품을 추가하세요.</div></div>`;
+    return `
+      <div class="pl-newbuild-row">
+        <input id="pl-newbuild-input" class="pl-input" type="text" placeholder="새 본체 이름 (예: 본체 2026-09-05 #1)">
+        <button class="pl-btn-outline" style="flex-shrink:0;" onclick="plCreateBuild()">+ 본체 만들기</button>
+      </div>
+      <div class="pl-list">
+        ${parts
+          .map(
+            (p) => `
+          <div class="pl-row">
+            <div class="pl-row-main">
+              <span class="pl-tag">${esc(p.category)}</span>
+              <div>
+                <div class="pl-row-title">${esc(p.part)}</div>
+                <div class="pl-row-sub">${esc(p.date)} · ${esc(p.site || "출처 미기재")}</div>
+              </div>
+            </div>
+            <div class="pl-row-right">
+              <span class="pl-price">${won(p.price)}</span>
+              <select class="pl-assign-select" onchange="plAssign('${p.id}', this)">
+                <option value="" disabled selected>본체에 배정</option>
+                ${openBuilds.map((b) => `<option value="${b.id}">${esc(b.name)}</option>`).join("")}
+              </select>
+              <button class="pl-icon-btn" onclick="plDeletePurchase('${p.id}')">${iconX()}</button>
+            </div>
+          </div>`
+          )
+          .join("")}
+      </div>`;
+  }
+
+  function renderBuilds() {
+    if (state.builds.length === 0) return `<div class="pl-empty">🖥️<div>아직 만든 본체가 없습니다. '재고' 탭에서 부품을 모아 본체를 만들어보세요.</div></div>`;
+    return `<div class="pl-list">${state.builds.map(renderBuildCard).join("")}</div>`;
+  }
+
+  function renderBuildCard(b) {
+    const parts = state.purchases.filter((p) => p.buildId === b.id);
+    const cost = parts.reduce((s, p) => s + Number(p.price || 0), 0);
+    const profit = b.salePrice != null ? b.salePrice - cost : null;
+    const selling = state._selling === b.id;
+    return `
+      <div class="pl-build-card">
+        <div class="pl-build-header">
+          <div>
+            <div class="pl-row-title">${esc(b.name)}</div>
+            <div class="pl-row-sub">${esc(b.createdDate)} 조립 시작 · 부품 ${parts.length}개</div>
+          </div>
+          <span class="pl-status-pill ${b.status === "sold" ? "pl-status-sold" : "pl-status-assembling"}">${b.status === "sold" ? "판매완료" : "조립중"}</span>
+        </div>
+        <div class="pl-build-parts">
+          ${parts
+            .map(
+              (p) => `
+            <div class="pl-build-part-row">
+              <span class="pl-tag">${esc(p.category)}</span>
+              <span style="flex:1;">${esc(p.part)}</span>
+              <span class="pl-price-sm">${won(p.price)}</span>
+              ${b.status !== "sold" ? `<button class="pl-icon-btn" onclick="plUnassign('${p.id}')">${iconX()}</button>` : ""}
+            </div>`
+            )
+            .join("")}
+        </div>
+        <div class="pl-cost-line"><span>총 원가</span><span class="pl-price-sm">${won(cost)}</span></div>
+        ${
+          b.status === "sold"
+            ? `<div class="pl-cost-line"><span>판매가${b.buyer ? " · " + esc(b.buyer) : ""}</span><span class="pl-price-sm">${won(b.salePrice)}</span></div>
+               <div class="pl-cost-line" style="font-weight:600;"><span>수익</span><span style="color:${profit >= 0 ? "var(--good)" : "var(--bad)"}">${profit >= 0 ? "+" : ""}${won(profit)}</span></div>`
+            : selling
+            ? `<div class="pl-sell-form">
+                <input id="pl-sell-price-${b.id}" class="pl-input" type="number" placeholder="판매가" style="flex:1;">
+                <input id="pl-sell-buyer-${b.id}" class="pl-input" type="text" placeholder="구매자 (선택)" style="flex:1;">
+                <button class="pl-btn-sm" onclick="plConfirmSell('${b.id}')">확정</button>
+              </div>`
+            : `<div class="pl-build-actions">
+                <button class="pl-btn-outline" ${parts.length === 0 ? "disabled" : ""} onclick="plStartSell('${b.id}')">📈 판매 처리</button>
+                <button class="pl-icon-btn" onclick="plDeleteBuild('${b.id}')">${iconX()}</button>
+              </div>`
+        }
+      </div>`;
+  }
+
+  function renderLedger() {
+    if (state.purchases.length === 0) return `<div class="pl-empty">📋<div>기록된 구매 내역이 없습니다.</div></div>`;
+    const buildName = (id) => (state.builds.find((b) => b.id === id) || {}).name || "—";
+    const total = state.purchases.reduce((s, p) => s + Number(p.price || 0), 0);
+    return `
+      <div class="pl-ledger-summary"><span>총 ${state.purchases.length}건</span><span class="pl-price-sm">누적 매입 ${won(total)}</span></div>
+      <div class="pl-list">
+        ${state.purchases
+          .map(
+            (p) => `
+          <div class="pl-row">
+            <div class="pl-row-main">
+              <span class="pl-tag">${esc(p.category)}</span>
+              <div>
+                <div class="pl-row-title">${esc(p.part)}</div>
+                <div class="pl-row-sub">${esc(p.date)} · ${esc(p.site || "출처 미기재")} · ${p.status === "stock" ? "재고" : p.status === "assigned" ? esc(buildName(p.buildId)) + "에 배정" : "판매완료"}</div>
+              </div>
+            </div>
+            <div class="pl-row-right">
+              <span class="pl-price">${won(p.price)}</span>
+              <button class="pl-icon-btn" onclick="plDeletePurchase('${p.id}')">${iconX()}</button>
+            </div>
+          </div>`
+          )
+          .join("")}
+      </div>`;
+  }
+
+  function render() {
+    if (!state.loaded) {
+      root.innerHTML = `<div style="padding:40px; text-align:center; color:var(--sub); font-size:13px;">불러오는 중...</div>`;
+      return;
+    }
+    const stockCount = state.purchases.filter((p) => p.status === "stock").length;
+    const stockValue = state.purchases.filter((p) => p.status === "stock").reduce((s, p) => s + Number(p.price || 0), 0);
+    let body;
+    if (state.tab === "quick") body = renderQuick();
+    else if (state.tab === "add") body = renderManual();
+    else if (state.tab === "stock") body = renderStock();
+    else if (state.tab === "builds") body = renderBuilds();
+    else body = renderLedger();
+
+    root.innerHTML = `
+      <div class="pl-header">
+        <div>
+          <div class="pl-kicker">부품 매입 · 조립 장부</div>
+          <h1 class="pl-title">재고 대장</h1>
+        </div>
+        <div class="pl-headstat"><b>${stockCount}</b><span>재고 부품 · ${won(stockValue)}</span></div>
+      </div>
+      ${state.error ? `<div class="pl-error-bar">${iconWarn()} ${esc(state.error)}</div>` : ""}
+      <div class="pl-tabs">
+        <button class="pl-tab ${state.tab === "quick" ? "active" : ""}" onclick="plSetTab('quick')">${iconSparkle()} 빠른 등록</button>
+        <button class="pl-tab ${state.tab === "add" ? "active" : ""}" onclick="plSetTab('add')">✎ 직접 입력</button>
+        <button class="pl-tab ${state.tab === "stock" ? "active" : ""}" onclick="plSetTab('stock')">🗄 재고<span class="pl-count">${stockCount}</span></button>
+        <button class="pl-tab ${state.tab === "builds" ? "active" : ""}" onclick="plSetTab('builds')">🖥 조립/판매<span class="pl-count">${state.builds.length}</span></button>
+        <button class="pl-tab ${state.tab === "ledger" ? "active" : ""}" onclick="plSetTab('ledger')">📋 전체 장부<span class="pl-count">${state.purchases.length}</span></button>
+      </div>
+      <div>${body}</div>
+    `;
+  }
+
+  render();
+  loadData();
+})();
+</script>
+
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  });
+}
+</script>
+</body>
+</html>
