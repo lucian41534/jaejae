@@ -123,6 +123,7 @@
     tab: "quick",
     loaded: false,
     error: "",
+    settingsOpen: false,
     quick: { mode: "image", rawText: "", imagePreview: null, imageData: null, status: "idle", errorMsg: "", extracted: null, justAdded: false },
     manual: { date: today(), site: "", items: [{ category: CATEGORIES[0], part: "", price: "" }], justAdded: false },
   };
@@ -204,13 +205,27 @@
     try { return (localStorage.getItem("parts-ledger:api-key") || "").trim(); } catch (e) { return ""; }
   }
 
-  window.plSetApiKey = function () {
-    const cur = getApiKey();
-    const key = window.prompt("Anthropic API 키를 입력하세요 (console.anthropic.com > API Keys 에서 발급)", cur);
-    if (key !== null) {
-      try { localStorage.setItem("parts-ledger:api-key", key.trim()); } catch (e) {}
-      setState({ error: "" });
-    }
+  function maskKey(key) {
+    if (!key) return "";
+    if (key.length <= 10) return "••••••••";
+    return key.slice(0, 7) + "…" + key.slice(-4);
+  }
+
+  window.plToggleApiSettings = function () {
+    setState({ settingsOpen: !state.settingsOpen });
+  };
+
+  window.plSaveApiKey = function () {
+    const input = document.getElementById("pl-apikey-input");
+    const val = (input?.value || "").trim();
+    if (!val) return;
+    try { localStorage.setItem("parts-ledger:api-key", val); } catch (e) {}
+    setState({ settingsOpen: false, error: "" });
+  };
+
+  window.plClearApiKey = function () {
+    try { localStorage.removeItem("parts-ledger:api-key"); } catch (e) {}
+    setState({ settingsOpen: false });
   };
 
   async function callClaudeExtract(content) {
@@ -701,6 +716,7 @@
     else if (state.tab === "builds") body = renderBuilds();
     else body = renderLedger();
 
+    const apiKey = getApiKey();
     root.innerHTML = `
       <div class="pl-header">
         <div>
@@ -709,9 +725,30 @@
         </div>
         <div class="pl-headstat"><b>${stockCount}</b><span>재고 부품 · ${won(stockValue)}</span></div>
       </div>
-      <div style="display:flex; justify-content:flex-end; margin-bottom:14px;">
-        <button class="pl-icon-btn" style="font-size:11px; gap:4px; border:1px solid var(--line); border-radius:4px; padding:5px 9px;" onclick="plSetApiKey()">⚙ API 키 설정</button>
+      <div style="display:flex; justify-content:flex-end; margin-bottom:${state.settingsOpen ? "8" : "14"}px;">
+        <button class="pl-icon-btn" style="font-size:11px; gap:4px; border:1px solid var(--line); border-radius:4px; padding:5px 9px;" onclick="plToggleApiSettings()">
+          ⚙ API 키 ${apiKey ? `설정됨 (${maskKey(apiKey)})` : "설정 안 됨"}
+        </button>
       </div>
+      ${
+        state.settingsOpen
+          ? `<div class="pl-card" style="margin-bottom:14px;">
+              <div class="pl-field" style="margin-bottom:10px;">
+                <label>Anthropic API 키 (console.anthropic.com &gt; API Keys 에서 발급)</label>
+                <input id="pl-apikey-input" class="pl-input" type="password" autocomplete="off" placeholder="${apiKey ? maskKey(apiKey) : "sk-ant-..."}">
+              </div>
+              <div style="font-size:11px; color:var(--sub); margin-bottom:10px; line-height:1.5;">
+                이 앱은 서버 없이 브라우저에서 직접 API를 호출해요. 키가 이 기기의 브라우저에만 저장되지만, 완전히 안전하진 않아요.
+                Anthropic 콘솔에서 이 키에 사용 한도(spend limit)를 걸어두는 걸 권장해요.
+              </div>
+              <div style="display:flex; gap:8px;">
+                <button class="pl-btn-sm" onclick="plSaveApiKey()">저장</button>
+                ${apiKey ? `<button class="pl-btn-outline" onclick="plClearApiKey()">${iconX()} 키 삭제</button>` : ""}
+                <button class="pl-btn-outline" onclick="plToggleApiSettings()">닫기</button>
+              </div>
+            </div>`
+          : ""
+      }
       ${state.error ? `<div class="pl-error-bar">${iconWarn()} ${esc(state.error)}</div>` : ""}
       <div class="pl-tabs">
         <button class="pl-tab ${state.tab === "quick" ? "active" : ""}" onclick="plSetTab('quick')">${iconSparkle()} 빠른 등록</button>
